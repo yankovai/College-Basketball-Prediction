@@ -67,9 +67,12 @@ class CBB_Acquire_Team_Data(object):
         
         if soup_results:
             soup_results = soup_results.parent()
-
+            
             for result in soup_results[1::]:
-                team_stats.append(float(result.string))
+                if result.string:
+                    team_stats.append(float(result.string))
+                else:
+                    team_stats.append(None)
         
         else:
             team_stats += [None]*21
@@ -101,8 +104,9 @@ class CBB_Acquire_Team_Data(object):
 
         self.team_names = team_names
 
-if __name__ == "__main__": 
-    cbb = CBB_Acquire_Team_Data(2013, 2013, 'cbb_team_data.csv')
+if __name__ == "__main__":
+    # Finished 638
+    cbb = CBB_Acquire_Team_Data(2003, 2013, 'cbb_team_data.csv')
     cbb()
 
 
