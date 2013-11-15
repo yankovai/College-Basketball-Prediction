@@ -16,7 +16,7 @@ class CBB_Acquire_Team_Data(object):
         self.csv_filename = csv_filename
         self.total_work = (year2 - year1 + 1)*len(self.team_names)
 
-    def __call__(self, start_id):
+    def __call__(self, start_id=1):
         """
         Creates the csv output file for further analysis. The variable 
         'start_id' specifies which data entry out of 'total_work' to start 
@@ -110,7 +110,7 @@ class CBB_Acquire_Team_Data(object):
 
 if __name__ == "__main__":
     cbb = CBB_Acquire_Team_Data(2003, 2013, 'cbb_team_data.csv')
-    cbb(639)
+    cbb(2692)
 
 
 
