@@ -15,6 +15,7 @@ class CBB_Acquire_Team_Data(object):
         self.get_team_names(year1, year2)
         self.csv_filename = csv_filename
         self.total_work = (year2 - year1 + 1)*len(self.team_names)
+        self.progress_id = 1
 
     def __call__(self, start_id=1):
         """
@@ -30,7 +31,6 @@ class CBB_Acquire_Team_Data(object):
                                      'DRB','TRB','AST','STL','BLK','TOV','PF',\
                                      'PTS','PTSg'])
 
-            self.progress_id = 1
             for year in range(self.year1, self.year2 + 1):
                 for team_name in self.team_names:
                     if self.progress_id >= start_id: 
