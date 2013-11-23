@@ -2,6 +2,7 @@ from pandas import *
 import sqlite3 as lite
 import numpy as np
 import csv
+import cPickle
 
 class Prepare_for_ML(object):
     """
@@ -30,19 +31,23 @@ class Prepare_for_ML(object):
                 games = csv.reader(csvfile)
                 games.next()
 
-                for game in games:
-                    feature, result = self.process_game(game, cur)
-                    
-                    if result:
-                        features.append(feature)
-                        results.append(result)
+                with open('ratings_dict.cpickle','rb') as cpickle_file:
+                    # Fold in ratings as features
+                    ratings_dict = cPickle.load(cpickle_file)
+
+                    for game in games:
+                        feature, result = self.process_game(game, cur, ratings_dict)
+                   
+                        if result != None:
+                            features.append(feature)
+                            results.append(result)
         
         # Save features and results to file
         features = np.vstack(features)
         results = np.array(results)
         np.savez('features', X = features, y = results)
         
-    def process_game(self, game, cursor):
+    def process_game(self, game, cursor, ratings_dict):
         """
         The input game is a list that contains the following elements:
         
@@ -51,8 +56,8 @@ class Prepare_for_ML(object):
         These elements refer to a matchup between team1 and team2 in some year.
         The result of the match is that team1 scored points1 while team2 scored
         points2. This function queries the SQL database 'cbb_db_name' and
-        returns the ratio features(team1):features(team2) along with the result,
-        which is 1 if team1 won or 0 otherwise.
+        returns the difference between features(team1) and features(team2) 
+        along with the result, which is 1 if team1 won or 0 otherwise.
         """
         
         query = 'SELECT * FROM Team_Stats WHERE Team = ? AND Year = ?'
@@ -60,19 +65,18 @@ class Prepare_for_ML(object):
         try:
             year, t1, t2, p1, p2 = game
             year, p1, p2 = map(int, [year, p1, p2])
-            
             cursor.execute(query, (t1, year))
-            feature1 = np.array(cursor.fetchone()[2::])
+            feature1 = list(cursor.fetchone()[2::]) + ratings_dict[year][t1].values()
             cursor.execute(query, (t2, year))
-            feature2 = np.array(cursor.fetchone()[2::])
-            feature = feature1/feature2
+            feature2 = list(cursor.fetchone()[2::]) + ratings_dict[year][t2].values()
+            feature = np.array(feature1) - np.array(feature2)
             
             # Calculate result of game 
             if (p1 - p2) > 0.:
                 result = 1.
             else:
                 result = 0.
-            
+
             return feature, result
             
         except ValueError:
@@ -120,7 +124,7 @@ class Prepare_for_ML(object):
                 pandas.io.sql.write_frame(df_out, 'Team_Stats', con, if_exists = 'replace')
                 # Add index to Team and Year columns
                 cur.execute('CREATE INDEX tp_indx ON Team_Stats(Team, Year);')
-    
+
 if __name__ == "__main__":
     pml = Prepare_for_ML('cbb_scoring_data.csv', 'cbb_data.db')
     pml()
