@@ -27,6 +27,7 @@ class CBB_Acquire_Team_Data(object):
         with open(self.csv_filename, 'wb') as csvfile:
             self.csvwriter = csv.writer(csvfile)
             self.csvwriter.writerow(['Team','Year','G','MP','FG','FGA','FGp', \
+                                     '2P', '2PA', '2Pp', \
                                      '3P','3PA','3Pp','FT','FTA','FTp','ORB', \
                                      'DRB','TRB','AST','STL','BLK','TOV','PF',\
                                      'PTS','PTSg'])
@@ -55,7 +56,7 @@ class CBB_Acquire_Team_Data(object):
         Returns a list with the following cummulative data for a NCAA basketball
         team in a given year:
         
-        G, MP, FG, FGA, FG%, 3P, 3PA, 3P%, FT, FTA, FT%, ORB, DRB, TRB, AST, STL,
+        G, MP, FG, FGA, FG%, 2P, 2PA, 2P%, 3P, 3PA, 3P%, FT, FTA, FT%, ORB, DRB, TRB, AST, STL,
         BLK, TOV, PF, PTS, PTS/G
 
         Using standard notation to describe the returned statistics. 
@@ -107,10 +108,3 @@ class CBB_Acquire_Team_Data(object):
                 team_names.append(str(team_name))
 
         self.team_names = team_names
-
-if __name__ == "__main__":
-    cbb = CBB_Acquire_Team_Data(2003, 2013, 'cbb_team_data.csv')
-    cbb(2692)
-
-
-
