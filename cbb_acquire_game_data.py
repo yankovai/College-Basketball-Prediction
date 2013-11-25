@@ -68,7 +68,10 @@ class CBB_Acquire_Scoring_Data(object):
                     team_score = [year, team_name, opponent] + scores
                     team_scores.append(team_score)
                 except AttributeError:
+                    pass        
+                except TypeError:
                     pass
+                
         else:
             team_scores = [[year, team_name] + [None]*3]
         
