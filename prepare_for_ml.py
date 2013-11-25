@@ -10,11 +10,12 @@ class Prepare_for_ML(object):
     form that can be digested by the scikit-learn classes.
     """
     
-    def __init__(self, scoring_filename, cbb_db_name):
+    def __init__(self, scoring_filename, cbb_db_name, ratings_dict_filename):
         self.scoring_filename = scoring_filename
         self.cbb_db_name = cbb_db_name
+        self.ratings_dict_filename = ratings_dict_filename
         
-    def __call__(self):
+    def __call__(self, features_filename):
         """
         Loops through the csv file 'scoring_filename' and creates a feature
         vector for each game played. The results are stored in an array 
@@ -31,7 +32,7 @@ class Prepare_for_ML(object):
                 games = csv.reader(csvfile)
                 games.next()
 
-                with open('ratings_dict.cpickle','rb') as cpickle_file:
+                with open(self.ratings_dict_filename,'rb') as cpickle_file:
                     # Fold in ratings as features
                     ratings_dict = cPickle.load(cpickle_file)
 
@@ -45,7 +46,7 @@ class Prepare_for_ML(object):
         # Save features and results to file
         features = np.vstack(features)
         results = np.array(results)
-        np.savez('features', X = features, y = results)
+        np.savez(features_filename, X = features, y = results)
         
     def process_game(self, game, cursor, ratings_dict):
         """
@@ -85,17 +86,13 @@ class Prepare_for_ML(object):
         except TypeError:
             return None, None
     
-    def process_raw_data(self, team_data_csv_filename, what_to_do, cbb_db_name = 'cbb_data.db'):
+    def process_raw_data(self, team_data_csv_filename, what_to_do = 'sql'):
         """
         Processes csv file named 'team_data_csv_filename' containing team data. If 
-        'what_to_do' is set to 'csv' then a csv file is output containing the 
-        following features:
-            
-        Team, Year, FGA, 3PA, FTA, TRB, AST, STL, BLK, TOV, PF, PTS, FGp, 3Pp, FTp
-            
-        If 'what_to_do' is set to 'sql' then a sqlite table named 'Team_Stats' is 
-        created in the database titled 'cbb_db_name'. All appropriate features are 
-        normalized to a 40-minute game. 
+        'what_to_do' is set to 'csv' then a csv file is output. If 'what_to_do' 
+        is set to 'sql' then a sqlite table named 'Team_Stats' is created in the
+        database titled 'cbb_db_name'. All appropriate features are normalized 
+        to a 40-minute game. 
         """
 
         df = read_csv(team_data_csv_filename, na_values = [''])
@@ -118,13 +115,10 @@ class Prepare_for_ML(object):
             df_out.to_csv(output_name, float_format = '%7.4f')
         elif what_to_do == 'sql':
             # Export to SQL table
-            con = lite.connect(cbb_db_name)
+            con = lite.connect(self.cbb_db_name)
             with con:
                 cur = con.cursor()
                 pandas.io.sql.write_frame(df_out, 'Team_Stats', con, if_exists = 'replace')
                 # Add index to Team and Year columns
                 cur.execute('CREATE INDEX tp_indx ON Team_Stats(Team, Year);')
 
-if __name__ == "__main__":
-    pml = Prepare_for_ML('cbb_scoring_data.csv', 'cbb_data.db')
-    pml()

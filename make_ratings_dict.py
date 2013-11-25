@@ -104,22 +104,22 @@ class Strength_of_Sched(object):
         
         return team_ratings
 
-if __name__ == '__main__':
+def create_ratings_dict(year1, year2, scoring_filename, ratings_dict_filename):
     """
     Create ratings_dict dictionary. Use example:
     ratings_dict[2003]['air-force'].values()
     """
-    year1 = 2003
-    year2 = 2013
+
     ratings_dict = {}
     for year in range(year1, year2 + 1):
-        ssd = Strength_of_Sched('cbb_scoring_data.csv', year)
+        ssd = Strength_of_Sched(scoring_filename, year)
         team_ratings = ssd()
         ratings_dict.setdefault(year, team_ratings)
 
     # Export to cpickle file
-    with open('ratings_dict.cpickle','wb') as cpickle_file:
+    with open(ratings_dict_filename,'wb') as cpickle_file:
         cPickle.dump(ratings_dict, cpickle_file)
+
 
 
 
